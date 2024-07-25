@@ -1,0 +1,8 @@
+!.gitkeep
+
+# mimir
+.data/mimir/mimir-tsdb-ingester/*
+
+# minio
+.data/minio/.minio.sys/*
+.data/minio/mimir-tsdb/*

@@ -1,0 +1,75 @@
+extensions:
+  headers_setter:
+    headers:
+      - action: upsert
+        key: X-Scope-OrgID
+        from_context: "tenant"
+
+processors:
+  context/tenant:
+    actions:
+    - action: insert
+      key: tenant
+      value: anonymous
+      from_attribute: tenant_id
+
+  transform:
+    error_mode: silent
+    metric_statements:
+      - context: resource
+        statements:
+          - set(attributes["tenant_id"], attributes["cloud.resource_id"])
+ 
+receivers:
+  kafka/app001:
+    topic: CLOUD_ID-APP001_metrics
+    brokers:
+      kafka-broker:9092
+    protocol_version: 2.0.0
+    metadata:
+      full: true
+  kafka/app002:
+    topic: CLOUD_ID-APP002_metrics
+    brokers:
+      kafka-broker:9092
+    protocol_version: 2.0.0
+    metadata:
+      full: true
+  kafka/app003:
+    topic: CLOUD_ID-APP003_metrics
+    brokers:
+      kafka-broker:9092
+    protocol_version: 2.0.0
+    metadata:
+      full: true
+
+exporters:
+  prometheusremotewrite:
+    endpoint: http://mimir:8001/api/v1/push
+    timeout: 20s
+    auth: 
+      authenticator: headers_setter
+  debug:
+    verbosity: detailed
+
+service:
+  extensions:
+  - headers_setter
+  telemetry:
+    logs:
+      level: DEBUG
+      initial_fields:
+        service: metrics
+    metrics:
+      level: detailed
+      address: localhost:8887
+  pipelines:
+    metrics:
+      receivers: 
+        - kafka/app001
+        - kafka/app002
+        - kafka/app003
+      processors:
+        - transform
+        - context/tenant
+      exporters: [prometheusremotewrite, debug]

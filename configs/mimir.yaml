@@ -1,0 +1,47 @@
+multitenancy_enabled: false
+
+distributor:
+  pool:
+    health_check_ingesters: true
+
+ingester_client:
+  grpc_client_config:
+    # Configure the client to allow messages up to 100MB.
+    max_recv_msg_size: 104857600
+    max_send_msg_size: 104857600
+    grpc_compression: gzip
+
+ingester:
+  ring:
+    # We want to start immediately.
+    final_sleep: 0s
+    num_tokens: 512
+    replication_factor: 1
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+
+blocks_storage:
+  backend: s3
+
+  s3:
+    endpoint:          minio:9000
+    bucket_name:       mimir-tsdb
+    access_key_id:     minio
+    secret_access_key: supersecret
+    insecure:          true
+
+  tsdb:
+    dir: /data/mimir-tsdb-ingester
+    ship_interval: 1m
+    block_ranges_period: [ 2h ]
+    retention_period: 3h
+
+  bucket_store:
+    sync_dir: /data/mimir-tsdb-querier
+
+alertmanager:
+
+limits:
+  native_histograms_ingestion_enabled: true

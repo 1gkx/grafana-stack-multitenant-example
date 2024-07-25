@@ -1,0 +1,28 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        include_metadata: true
+        endpoint: 0.0.0.0:5555
+      http:
+        endpoint: 0.0.0.0:5556
+
+exporters:
+  kafka/metrics:
+    topic: CLOUD_ID-APP003_metrics
+    brokers:
+      - kafka-broker:9092
+    producer:
+      max_message_bytes: 200000000
+    protocol_version: 2.0.0
+  debug:
+    verbosity: detailed
+
+service:
+  telemetry:
+    metrics:
+      address: localhost:8887
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [kafka/metrics, debug]

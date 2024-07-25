@@ -1,0 +1,43 @@
+processors:
+  resource:
+    attributes:
+      - key: cloud.provider
+        value: SECOND-CLOUD-PROVIDER
+        action: upsert
+      - key: cloud.region
+        value: SPB
+        action: upsert
+      - key: cloud.resource_id
+        value: CLOUD_ID-APP002
+        action: upsert
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        include_metadata: true
+        endpoint: 0.0.0.0:5555
+      http:
+        endpoint: 0.0.0.0:5556
+
+exporters:
+  kafka/metrics:
+    topic: CLOUD_ID-APP002_metrics
+    brokers:
+      - kafka-broker:9092
+    producer:
+      max_message_bytes: 200000000
+    protocol_version: 2.0.0
+  debug:
+    verbosity: detailed
+
+service:
+  telemetry:
+    metrics:
+      address: localhost:8887
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors:
+        - resource
+      exporters: [kafka/metrics, debug]
